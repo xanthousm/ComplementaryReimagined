@@ -75,6 +75,11 @@ void main() {
 	color *= glColor;
 
 	float materialMask = OSIEBB * 4.0; // No SSAO, No TAA
+	
+	//lightning fix
+	if (entityId == 50004) {
+		color.a = 1.0;
+	}
 	if (color.a > 0.00001) {
 		color.rgb = mix(color.rgb, entityColor.rgb, entityColor.a);
 
@@ -94,7 +99,11 @@ void main() {
 		#else
 			// I should put player effects here when I actually do player effects
 		#endif
-
+		//lightning fix
+		if (entityId == 50004) {
+			color = vec4(0.8, 0.85, 0.9, 0.5);
+			emission = 0.25;
+		}
 		DoLighting(color.rgb, shadowMult, playerPos, viewPos, lViewPos, normalM, lmCoordM,
 		           true, false, false, 0,
 			       0.0, highlightMult, emission);
