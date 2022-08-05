@@ -97,7 +97,7 @@
     //#define SAFER_GENERATED_NORMALS
 
     #define BLOOM
-    #define UNDERWATER_DISTORTION
+    //#define UNDERWATER_DISTORTION
 
 //Define Handling//
     #ifndef OVERWORLD

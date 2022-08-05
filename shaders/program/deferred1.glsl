@@ -316,7 +316,7 @@ void main() {
 
 			#ifdef AURORA_BOREALIS
 				auroraBorealis = GetAuroraBorealis(viewPos.xyz, VdotU, dither);
-				color.rgb += auroraBorealis;
+				color.rgb += auroraBorealis*0.3;
 			#endif
 		#endif
 		#ifdef NETHER
