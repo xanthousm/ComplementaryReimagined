@@ -14,7 +14,8 @@ vec3 GetWave(in vec3 pos, float waveSpeed) {
     wave.z = sin(wind*0.0224 + d1 + d2 + pos.x - pos.z + pos.y) * magnitude;
     wave.y = sin(wind*0.0015 + d2 + d0 + pos.z + pos.y - pos.y) * magnitude;
 
-    wave *= max0(lmCoord.y - 0.9);
+    //wave *= max0(lmCoord.y - 0.9);
+    wave *= clamp(lmCoord.y - 0.3,0,0.1);
 
     return wave;
 }
@@ -45,6 +46,15 @@ void DoWave_Leaves(inout vec3 playerPos, vec3 worldPos) {
     playerPos.xyz += wave;
 }
 
+void DoWave_Vine(inout vec3 playerPos, vec3 worldPos) {
+    worldPos *= vec3(0.5, 0.25, 0.5);
+
+    vec3 wave = GetWave(worldPos, 170.0);
+    wave *= vec3(4.0, 3.0, 2.0);
+
+    playerPos.xyz += wave;
+}
+
 void DoWave(inout vec3 playerPos, int mat) {
     vec3 worldPos = playerPos.xyz + cameraPosition.xyz;
 
@@ -55,8 +65,11 @@ void DoWave(inout vec3 playerPos, int mat) {
     }
 
     #if WAVING_BLOCKS >= 2
-        else if (mat == 10008 || mat == 10012) { // Leaves, Vine
+        else if (mat == 10008) { // Leaves,
             DoWave_Leaves(playerPos.xyz, worldPos);
+        }
+        else if (mat == 10012){ //Vine
+            DoWave_Vine(playerPos.xyz, worldPos);
         }
     #endif
 }

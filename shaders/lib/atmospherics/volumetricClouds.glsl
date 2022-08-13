@@ -49,9 +49,11 @@ vec3 cloudLightColor   = mix(lightColor * 0.9, cloudRainColor, rainFactor);
 
 bool GetCloudNoise(vec3 tracePos, float cloudAltitude) {
     vec2 coord = GetRoundedCloudCoord(ModifyTracePos(tracePos.xyz, cloudAltitude).xz);
-    
-    float noise = texture2D(colortex3, coord).r;
-    float threshold = clamp(abs(cloudAltitude - tracePos.y) / cloudStretch, 0.001, 0.999);
+
+    float noise =0.0;
+    if(cloudAltitude>250){noise = texture2D(colortex3, coord).r;}
+    else{noise = texture2D(colortex3, coord).b;}
+    float threshold = clamp(abs(cloudAltitude - tracePos.y) / (cloudStretch*mix(1.5,0.9,cloudAltitude/400.0)), 0.001, 0.999);
     threshold = pow2(pow2(pow2(threshold)));
     return noise > (threshold * 0.5 + 0.25);
 }
@@ -61,8 +63,8 @@ vec4 GetVolumetricClouds(float cloudAltitude, float distanceThreshold, inout flo
     vec3 nPlayerPos = normalize(playerPos);
     if (lViewPos >= far * 1.5) lViewPos = 1000000000.0;
 
-    float higherPlaneAltitude = cloudAltitude + cloudStretch;
-    float lowerPlaneAltitude  = cloudAltitude - cloudStretch;
+    float higherPlaneAltitude = cloudAltitude + (cloudStretch*mix(1.5,0.9,cloudAltitude/400.0));
+    float lowerPlaneAltitude  = cloudAltitude - (cloudStretch*mix(1.5,0.9,cloudAltitude/400.0));
 
     float lowerPlaneDistance  = (lowerPlaneAltitude - cameraPosition.y) / nPlayerPos.y;
     float higherPlaneDistance = (higherPlaneAltitude - cameraPosition.y) / nPlayerPos.y;
@@ -104,7 +106,7 @@ vec4 GetVolumetricClouds(float cloudAltitude, float distanceThreshold, inout flo
                 }
             #endif
 
-            float cloudShading = 1.0 - (higherPlaneAltitude - tracePos.y) / cloudHeight;
+            float cloudShading = 1.0 - (higherPlaneAltitude - tracePos.y) / (cloudHeight*mix(1.5,0.9,cloudAltitude/400.0));
 
             #if CLOUD_QUALITY >= 3
                 float cloudShadingM = 1.0 - pow2(cloudShading);
@@ -117,11 +119,16 @@ vec4 GetVolumetricClouds(float cloudAltitude, float distanceThreshold, inout flo
 
                 float light = 2.0;
                 cLightPos += (1.0 + gradientNoise) * cLightPosAdd;
-                //light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM;
-				light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM*0.5;
-                cLightPos += gradientNoise * cLightPosAdd;
-                //light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM;
-				light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM*0.5;
+                if(cloudAltitude>250){
+                    light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM*0.5;
+                    cLightPos += gradientNoise * cLightPosAdd;
+                    light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).r * cloudShadingM*0.5;
+				}
+				else{
+                    light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).b * cloudShadingM*0.5;
+                    cLightPos += gradientNoise * cLightPosAdd;
+                    light -= texture2D(colortex3, GetRoundedCloudCoord(cLightPos.xz)).b * cloudShadingM*0.5;
+				}
                 
                 float VdotSM = VdotS;
                       if (sunVisibility < 0.5) VdotSM = -VdotSM;
@@ -131,9 +138,9 @@ vec4 GetVolumetricClouds(float cloudAltitude, float distanceThreshold, inout flo
             
             vec3 colorSample = cloudAmbientColor + cloudLightColor * (0.07 + cloudShading);
             float cloudFogFactor = clamp((distanceThreshold - lTracePos) / distanceThreshold, 0.0, 0.75);
-			//============
-			if(distanceThreshold >900) cloudFogFactor*=0.55;
-			//============
+
+			cloudFogFactor*=mix(1.5,0.35,cloudAltitude/400.0);
+
             colorSample = mix(GetSky(VdotU, VdotS, dither, true, false), colorSample, cloudFogFactor * 0.65);
             colorSample *= pow2(1.0 - max(blindness, darknessFactor));
             
